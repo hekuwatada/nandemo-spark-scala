@@ -53,4 +53,29 @@ class TestWithSparkLocalSpec extends FunSpec with Matchers {
       }
     }
   }
+
+  describe("Dataset") {
+    it("creates Dataset from source data in memory") {
+      withSparkSession { ss: SparkSession =>
+        import ss.implicits._
+
+        val ds: Dataset[Int] = Seq(1, 2, 3, 4, 5, 2, 3, 4).toDS()
+        //        ds.explain(true) // action
+        val distinctDs: Dataset[Int] = ds.dropDuplicates()
+        val collectedData: Array[Int] = distinctDs.collect()
+        collectedData should contain theSameElementsAs Array(1, 2, 3, 4, 5)
+      }
+    }
+
+    it("creates Dataset from RDD") {
+      withSparkSession { ss: SparkSession =>
+        import ss.implicits._
+        val sc = ss.sparkContext
+
+        val ds: Dataset[Int] = sc.parallelize(Seq(1, 2, 3, 4, 5)).toDS()
+        //TODO: implement with mapPartition
+        ds.reduce(_ + _) shouldBe 15
+      }
+    }
+  }
 }
