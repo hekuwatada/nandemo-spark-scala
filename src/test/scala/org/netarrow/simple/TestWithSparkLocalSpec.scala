@@ -3,6 +3,7 @@ package org.netarrow.simple
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Dataset, SparkSession}
+import org.netarrow.model.User
 import org.scalatest.{FunSpec, Matchers}
 
 /**
@@ -50,6 +51,17 @@ class TestWithSparkLocalSpec extends FunSpec with Matchers {
         val rdd: RDD[Int] = sc.parallelize(numbers)
         val filteredRdd: RDD[String] = rdd.filter(_ % 2 != 0).map(_.toString)
         filteredRdd.count() shouldBe 500000
+      }
+    }
+
+    it("creates pair RDD with simple case class with serializable values") {
+      withSparkContext { sc: SparkContext =>
+        val users: Seq[User] = Seq(User("name1", 10), User("name2", 10), User("name3", 35))
+        val rdd: RDD[User] = sc.parallelize(users)
+        val pairRdd: RDD[(Int, String)] = rdd.map(u => (u.age, u.name))
+        val groupedPairRdd: RDD[(Int, Iterable[String])] = pairRdd.groupByKey()
+        val groupedUsers: Array[(Int, Iterable[String])] = groupedPairRdd.collect()
+        groupedUsers should contain theSameElementsAs Array((10, Seq("name1", "name2")), (35, Seq("name3")))
       }
     }
   }
