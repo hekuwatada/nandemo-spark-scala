@@ -4,37 +4,14 @@ import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.netarrow.model.User
+import org.netarrow.testutil.SparkLocal
 import org.scalatest.{FunSpec, Matchers}
 
 /**
   * This test is to illustrate running unit tests with local Spark
   */
-class TestWithSparkLocalSpec extends FunSpec with Matchers {
+class TestWithSparkSpecLocal extends FunSpec with Matchers with SparkLocal {
   val appName = "TestWithSparkLocalSpec"
-
-  private def createSparkSession(appName: String): SparkSession = {
-    SparkSession.builder()
-      .appName(appName)
-      //NOTE: Local in-process mode
-      // driver is used for execution
-      // uses as many threads as the number of processors available to JVM
-      //@see https://jaceklaskowski.gitbooks.io/mastering-apache-spark/spark-local.html
-      .master("local[*]")
-      .getOrCreate()
-  }
-
-  private def withSparkSession(testBlock: (SparkSession) => Unit): Unit = {
-    val ss = createSparkSession(appName)
-    try {
-      testBlock(ss)
-    } finally {
-      ss.sparkContext.stop()
-    }
-  }
-
-  private def withSparkContext(testBlock: (SparkContext) => Unit): Unit =
-    withSparkSession((ss: SparkSession) => testBlock(ss.sparkContext))
-
 
   describe("Testing with local Spark") {
     it("starts a local Spark") {
