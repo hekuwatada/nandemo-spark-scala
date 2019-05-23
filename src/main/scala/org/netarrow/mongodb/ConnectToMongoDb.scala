@@ -1,7 +1,10 @@
 package org.netarrow.mongodb
 
 import com.mongodb.spark.MongoSpark
-import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
+import com.mongodb.spark.rdd.MongoRDD
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
+import org.bson.Document
 import org.netarrow.model.User
 
 object ConnectToMongoDb extends App {
@@ -29,15 +32,41 @@ object ConnectToMongoDb extends App {
 
   MongoSpark.save(users)
 
+  /**
+    * Data set and filter
+    */
   val ds: Dataset[User] = MongoSpark
     .load(spark).as[User]
     .filter(_.age < 10)
 
-  val ret = ds.count()
+//  val ret = ds.count()
+//
+//  println(ds.first())
 
-  println(ds.first())
 
-  println(ret)
+  ////// WIP //////
+
+  /**
+    * MongoRDD and filter documents
+    */
+  //@see https://docs.mongodb.com/spark-connector/master/scala/aggregation/
+
+  // shortcut of below is:
+  // val rdd: MongoRDD[Document] = MongoSpark.load(spark.sparkContext)
+  import com.mongodb.spark._
+  val mongoRdd: MongoRDD[Document] =
+    spark.sparkContext.loadFromMongoDB()
+  val rddDoc: RDD[Document] = mongoRdd
+    .filter(doc => doc.getInteger("age") < 10) // toDS[T] does not work at this point
+
+  /**
+    * Use Spark Context to load to RDD
+    */
+  val rdd: MongoRDD[Document] = MongoSpark.load(spark.sparkContext)
+  val docs: Dataset[User] = rdd.toDS[User]() // toDS[T] works without filter
+
+  println(docs.first())
+
 
   spark.stop()
 }
