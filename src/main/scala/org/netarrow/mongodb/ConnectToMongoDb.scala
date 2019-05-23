@@ -29,8 +29,13 @@ object ConnectToMongoDb extends App {
 
   MongoSpark.save(users)
 
-  val df: DataFrame = MongoSpark.load(spark)
-  val ret = df.count()
+  val ds: Dataset[User] = MongoSpark
+    .load(spark).as[User]
+    .filter(_.age < 10)
+
+  val ret = ds.count()
+
+  println(ds.first())
 
   println(ret)
 
