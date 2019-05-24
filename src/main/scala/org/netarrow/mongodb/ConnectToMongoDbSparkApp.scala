@@ -2,6 +2,7 @@ package org.netarrow.mongodb
 
 import com.mongodb.spark.MongoSpark
 import com.mongodb.spark.rdd.MongoRDD
+import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.bson.Document
@@ -15,6 +16,7 @@ import org.netarrow.model.User
 
 object WriteToMongoDb$App extends App with SparkAppWithMongoDb {
   val appName = "WriteToMongoDb"
+  implicit val config = ConfigFactory.load()
 
   run { ss: SparkSession =>
     import ss.implicits._
@@ -33,6 +35,7 @@ object ReadFromMongoDb$App extends App with SparkAppWithMongoDb {
   //@see https://docs.mongodb.com/spark-connector/master/scala/aggregation/
 
   val appName = "ReadFromMongoDb"
+  implicit val config = ConfigFactory.load()
 
   run { ss: SparkSession =>
     import ss.implicits._
@@ -89,7 +92,7 @@ object ReadFromMongoDb$App extends App with SparkAppWithMongoDb {
 trait SparkAppWithMongoDb {
   def appName: String
 
-  def run(jobBlock: SparkSession => Unit): Unit = {
+  def run(jobBlock: SparkSession => Unit)(implicit config: Config): Unit = {
     val ss = createSparkSession(appName)
 
     try {
@@ -99,11 +102,15 @@ trait SparkAppWithMongoDb {
     }
   }
 
-  private def createSparkSession(appName: String): SparkSession =
+  private def createSparkSession(appName: String)(implicit config: Config): SparkSession = {
+    val sparkMaster = config.getString("spark.master")
+    val mongodbServer = config.getString("mongodb.server")
+
     SparkSession.builder()
-      .master("local")
+      .master(sparkMaster)
       .appName(appName)
-      .config("spark.mongodb.input.uri", "mongodb://127.0.0.1/test2.user")
-      .config("spark.mongodb.output.uri", "mongodb://127.0.0.1/test2.user")
+      .config("spark.mongodb.input.uri", s"mongodb://$mongodbServer/test2.user")
+      .config("spark.mongodb.output.uri", s"mongodb://$mongodbServer/test2.user")
       .getOrCreate()
+  }
 }
