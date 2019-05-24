@@ -1,7 +1,7 @@
 package org.netarrow.parquet
 
-import com.typesafe.config.ConfigFactory
-import org.apache.spark.sql.{DataFrame, Dataset, Encoders, SparkSession}
+import com.typesafe.config.{Config, ConfigFactory}
+import org.apache.spark.sql.{Dataset, Encoders, SparkSession}
 import org.netarrow.app.SparkApp
 import org.netarrow.model.User
 
@@ -9,7 +9,7 @@ import org.netarrow.model.User
 
 object WriteAsParquetSparkApp extends App with SparkApp {
   val appName = "WriteAsParquetSparkApp"
-  implicit val config = ConfigFactory.load()
+  implicit val config: Config = ConfigFactory.load()
 
   run { ss: SparkSession =>
     import ss.implicits._
@@ -23,7 +23,7 @@ object WriteAsParquetSparkApp extends App with SparkApp {
 
 object ReadFromParquetSparkApp extends App with SparkApp {
   val appName = "ReadFromParquetSparkApp"
-  implicit val config = ConfigFactory.load()
+  implicit val config: Config = ConfigFactory.load()
 
   run { ss: SparkSession =>
     import ss.implicits._
