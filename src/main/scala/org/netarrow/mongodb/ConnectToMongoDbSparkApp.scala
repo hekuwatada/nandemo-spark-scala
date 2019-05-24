@@ -2,10 +2,11 @@ package org.netarrow.mongodb
 
 import com.mongodb.spark.MongoSpark
 import com.mongodb.spark.rdd.MongoRDD
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.ConfigFactory
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.bson.Document
+import org.netarrow.app.SparkAppWithMongoDb
 import org.netarrow.model.User
 
 //@see https://docs.mongodb.com/spark-connector/master/scala-api/
@@ -86,31 +87,5 @@ object ReadFromMongoDb$App extends App with SparkAppWithMongoDb {
     val filteredUsers: Dataset[User] = filteredMongoRdd.toDS[User]
 
     println(filteredUsers.first())
-  }
-}
-
-trait SparkAppWithMongoDb {
-  def appName: String
-
-  def run(jobBlock: SparkSession => Unit)(implicit config: Config): Unit = {
-    val ss = createSparkSession(appName)
-
-    try {
-      jobBlock(ss)
-    } finally {
-      ss.stop()
-    }
-  }
-
-  private def createSparkSession(appName: String)(implicit config: Config): SparkSession = {
-    val sparkMaster = config.getString("spark.master")
-    val mongodbServer = config.getString("mongodb.server")
-
-    SparkSession.builder()
-      .master(sparkMaster)
-      .appName(appName)
-      .config("spark.mongodb.input.uri", s"mongodb://$mongodbServer/test2.user")
-      .config("spark.mongodb.output.uri", s"mongodb://$mongodbServer/test2.user")
-      .getOrCreate()
   }
 }
