@@ -12,5 +12,6 @@ object ConfigSparkApp extends App with SparkApp {
 
   run { ss: SparkSession =>
     println(ss.conf.getAll)
+    print(ss.sparkContext.getConf.toDebugString)
   }
 }
